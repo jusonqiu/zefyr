@@ -53,8 +53,10 @@ final kZefyrToolbarAttributeActions = <ZefyrToolbarAction, NotusAttributeKey>{
 
 /// Allows customizing appearance of [ZefyrToolbar].
 abstract class ZefyrToolbarDelegate {
+
   /// Builds toolbar button for specified [action].
-  ///
+  List<ZefyrToolbarAction> buildActions() ;
+
   /// Returned widget is usually an instance of [ZefyrButton].
   Widget buildButton(BuildContext context, ZefyrToolbarAction action,
       {VoidCallback onPressed});
@@ -218,10 +220,12 @@ class ZefyrToolbarState extends State<ZefyrToolbar>
 
     // Must set unique key for the toolbar to prevent it from reconstructing
     // new state each time we toggle overlay.
+    final actions = _delegate.buildActions();
+    assert(actions != null);
     final toolbar = ZefyrToolbarScaffold(
       key: _toolbarKey,
       body: ZefyrButtonList(buttons: _buildButtons(context)),
-      trailing: buildButton(context, ZefyrToolbarAction.hideKeyboard),
+      trailing: actions.contains(ZefyrToolbarAction.hideKeyboard) ? buildButton(context, ZefyrToolbarAction.hideKeyboard) : null,
     );
 
     layers.add(toolbar);
@@ -250,17 +254,40 @@ class ZefyrToolbarState extends State<ZefyrToolbar>
 
   List<Widget> _buildButtons(BuildContext context) {
     final buttons = <Widget>[
-      buildButton(context, ZefyrToolbarAction.bold),
-      buildButton(context, ZefyrToolbarAction.italic),
-      LinkButton(),
-      HeadingButton(),
-      buildButton(context, ZefyrToolbarAction.bulletList),
-      buildButton(context, ZefyrToolbarAction.numberList),
-      buildButton(context, ZefyrToolbarAction.quote),
-      buildButton(context, ZefyrToolbarAction.code),
-      buildButton(context, ZefyrToolbarAction.horizontalRule),
-      if (editor.imageDelegate != null) ImageButton(),
+//      buildButton(context, ZefyrToolbarAction.bold),
+//      buildButton(context, ZefyrToolbarAction.italic),
+//      LinkButton(),
+//      HeadingButton(),
+//      buildButton(context, ZefyrToolbarAction.bulletList),
+//      buildButton(context, ZefyrToolbarAction.numberList),
+//      buildButton(context, ZefyrToolbarAction.quote),
+//      buildButton(context, ZefyrToolbarAction.code),
+//      buildButton(context, ZefyrToolbarAction.horizontalRule),
+//      if (editor.imageDelegate != null) ImageButton(),
     ];
+    final buttonActions = [
+      ZefyrToolbarAction.bold,
+      ZefyrToolbarAction.italic,
+      ZefyrToolbarAction.bulletList,
+      ZefyrToolbarAction.numberList,
+      ZefyrToolbarAction.quote,
+      ZefyrToolbarAction.code,
+      ZefyrToolbarAction.horizontalRule
+    ];
+    final actions = _delegate.buildActions();
+    for (var action in actions) {
+      if (action == ZefyrToolbarAction.link){
+        buttons.add(LinkButton());
+      } else if (action == ZefyrToolbarAction.heading){
+        buttons.add(HeadingButton());
+      } else if (action == ZefyrToolbarAction.image) {
+        if (editor.imageDelegate != null) buttons.add(ImageButton());
+      } else {
+        if (buttonActions.contains(action)) {
+          buttons.add(buildButton(context, action));
+        }
+      }
+    }
     return buttons;
   }
 }
@@ -368,6 +395,32 @@ class _DefaultZefyrToolbarDelegate implements ZefyrToolbarDelegate {
     ZefyrToolbarAction.headingLevel2: 'H2',
     ZefyrToolbarAction.headingLevel3: 'H3',
   };
+
+  List<ZefyrToolbarAction> buildActions() {
+    return [
+      ZefyrToolbarAction.bold,
+      ZefyrToolbarAction.italic,
+      ZefyrToolbarAction.link,
+      ZefyrToolbarAction.unlink,
+      ZefyrToolbarAction.clipboardCopy,
+      ZefyrToolbarAction.openInBrowser,
+      ZefyrToolbarAction.heading,
+      ZefyrToolbarAction.headingLevel1,
+      ZefyrToolbarAction.headingLevel2,
+      ZefyrToolbarAction.headingLevel3,
+      ZefyrToolbarAction.bulletList,
+      ZefyrToolbarAction.numberList,
+      ZefyrToolbarAction.code,
+      ZefyrToolbarAction.quote,
+      ZefyrToolbarAction.horizontalRule,
+      ZefyrToolbarAction.image,
+      ZefyrToolbarAction.cameraImage,
+      ZefyrToolbarAction.galleryImage,
+      ZefyrToolbarAction.hideKeyboard,
+      ZefyrToolbarAction.close,
+      ZefyrToolbarAction.confirm
+    ];
+  }
 
   @override
   Widget buildButton(BuildContext context, ZefyrToolbarAction action,
